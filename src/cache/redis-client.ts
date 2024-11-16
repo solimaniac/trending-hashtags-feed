@@ -17,6 +17,7 @@ export class RedisClient {
     private client: RedisClientType;
     private readonly BUCKET_PREFIX = 'hashtag_bucket:';
     private readonly BUCKET_DURATION_MS = 60 * 60 * 1000;
+    private readonly CURSOR_PREFIX = 'firehose_cursor:';
 
     constructor(config: RedisConfig) {
         const { host = 'localhost', port = 6379, password, username } = config;
@@ -47,6 +48,15 @@ export class RedisClient {
     async trackHashtag(hashtag: string): Promise<number> {
         const currentBucketKey = await this.getCurrentOrCreateBucket();
         return await this.client.hIncrBy(currentBucketKey, hashtag, 1);
+    }
+
+    async getCursor(service: string): Promise<number | null> {
+        const cursor = await this.client.get(`${this.CURSOR_PREFIX}${service}`);
+        return cursor ? parseInt(cursor, 10) : null;
+    }
+
+    async updateCursor(service: string, cursor: number): Promise<void> {
+        await this.client.set(`${this.CURSOR_PREFIX}${service}`, cursor.toString());
     }
 
     private async getCurrentOrCreateBucket(): Promise<string> {

@@ -11,12 +11,13 @@ import {
   OutputSchema as RepoEvent,
   isCommit,
 } from '../lexicon/types/com/atproto/sync/subscribeRepos'
-import { Database } from '../db'
+import {RedisClient} from "../cache/redis-client";
 
 export abstract class FirehoseSubscriptionBase {
   public sub: Subscription<RepoEvent>
+  protected redisClient: RedisClient
 
-  constructor(public db: Database, public service: string) {
+  constructor(public redisClient: RedisClient, public service: string) {
     this.sub = new Subscription({
       service: service,
       method: ids.ComAtprotoSyncSubscribeRepos,
@@ -57,20 +58,12 @@ export abstract class FirehoseSubscriptionBase {
   }
 
   async updateCursor(cursor: number) {
-    await this.db
-      .updateTable('sub_state')
-      .set({ cursor })
-      .where('service', '=', this.service)
-      .execute()
+    await this.redisClient.updateCursor(this.service, cursor)
   }
 
   async getCursor(): Promise<{ cursor?: number }> {
-    const res = await this.db
-      .selectFrom('sub_state')
-      .selectAll()
-      .where('service', '=', this.service)
-      .executeTakeFirst()
-    return res ? { cursor: res.cursor } : {}
+    const cursor = await this.redisClient.getCursor(this.service)
+    return cursor ? { cursor } : {}
   }
 }
 

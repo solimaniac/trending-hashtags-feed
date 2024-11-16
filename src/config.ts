@@ -1,8 +1,8 @@
-import { Database } from './db'
 import { DidResolver } from '@atproto/identity'
+import {RedisClient} from "./cache/redis-client";
 
 export type AppContext = {
-  db: Database
+  cache: RedisClient
   didResolver: DidResolver
   cfg: Config
 }
