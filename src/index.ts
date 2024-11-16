@@ -9,7 +9,6 @@ const run = async () => {
   const server = FeedGenerator.create({
     port: maybeInt(process.env.FEEDGEN_PORT) ?? 3000,
     listenhost: maybeStr(process.env.FEEDGEN_LISTENHOST) ?? 'localhost',
-    sqliteLocation: maybeStr(process.env.FEEDGEN_SQLITE_LOCATION) ?? ':memory:',
     subscriptionEndpoint:
       maybeStr(process.env.FEEDGEN_SUBSCRIPTION_ENDPOINT) ??
       'wss://bsky.network',
@@ -19,6 +18,10 @@ const run = async () => {
       maybeInt(process.env.FEEDGEN_SUBSCRIPTION_RECONNECT_DELAY) ?? 3000,
     hostname,
     serviceDid,
+    redisHost: maybeStr(process.env.REDIS_HOST) ?? 'localhost',
+    redisPort: maybeInt(process.env.REDIS_PORT) ?? 6379,
+    redisUsername: maybeStr(process.env.REDIS_USERNAME) ?? '',
+    redisPassword: maybeStr(process.env.REDIS_PASSWORD) ?? '',
   })
   await server.start()
   console.log(
