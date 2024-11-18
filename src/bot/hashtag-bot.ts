@@ -2,7 +2,7 @@ import { Bot } from "@skyware/bot";
 import { Config } from "../config";
 import { RedisClient } from "../cache/redis-client";
 import { v4 as uuidv4 } from 'uuid';
-import numeral from 'numeral';
+import numeral from "numeral";
 
 export class HashtagBot {
     private bot: Bot;
