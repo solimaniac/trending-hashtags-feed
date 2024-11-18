@@ -1,25 +1,32 @@
-import { Bot } from "@skyware/bot";
 import { Config } from "../config";
 import { RedisClient } from "../cache/redis-client";
 import { v4 as uuidv4 } from 'uuid';
 import numeral from "numeral";
 
 export class HashtagBot {
-    private bot: Bot;
+    private bot: any;
     private username: string;
     private password: string;
     private isLoggedIn: boolean;
     private cache: RedisClient;
 
     constructor(config: Config, cache: RedisClient) {
-        this.bot = new Bot();
         this.username = config.bskyUsername;
         this.password = config.bskyPassword;
         this.isLoggedIn = false;
         this.cache = cache;
     }
 
+    private async initializeBot() {
+        const { Bot } = await import('@skyware/bot');
+        this.bot = new Bot();
+    }
+
     async refreshTopHashtags(): Promise<void> {
+        if (!this.bot) {
+            await this.initializeBot();
+        }
+
         if (!this.isLoggedIn) {
             await this.bot.login({
                 identifier: this.username,
