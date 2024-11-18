@@ -32,7 +32,11 @@ export class HashtagBot {
         const topHashtags = await this.cache.getTopHashtags();
         const sortedHashtags = [...topHashtags].sort((a, b) => a.count - b.count);
 
-        const successfulPosts = [];
+        const successfulPosts: {
+            hashtag: string;
+            count: number;
+            uri: string;
+        }[] = [];
 
         for (const { hashtag, count } of sortedHashtags) {
             try {
