@@ -21,6 +21,7 @@
     "@atproto/xrpc-server": "^0.6.0",
     "@skyware/bot": "^0.3.7",
     "@types/node-cron": "^3.0.11",
+    "badwords-list": "^2.0.1-4",
     "better-sqlite3": "^11.3.0",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
@@ -29,9 +30,9 @@
     "node-cron": "^3.0.3",
     "numeral": "^2.0.6",
     "redis": "^4.7.0",
+    "ts-node": "^10.9.1",
     "tsx": "^4.19.2",
-    "uuid": "^11.0.3",
-    "ts-node": "^10.9.1"
+    "uuid": "^11.0.3"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.11",

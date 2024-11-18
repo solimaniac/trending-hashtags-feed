@@ -3,21 +3,26 @@ import {
   isCommit,
 } from './lexicon/types/com/atproto/sync/subscribeRepos'
 import { FirehoseSubscriptionBase, getOpsByType } from './util/subscription'
-import {Record} from "./lexicon/types/app/bsky/feed/post";
+import { Record } from './lexicon/types/app/bsky/feed/post'
+import badwords from 'badwords-list';
 
 export class FirehoseSubscription extends FirehoseSubscriptionBase {
   private readonly labelFilter = [
-      'sexual',
-      'porn',
-      'nudity',
-      'graphic-media',
+    'sexual',
+    'porn',
+    'nudity',
+    'graphic-media',
   ];
+
+  private readonly badWordsSet = new Set(badwords.array);
 
   private extractHashtags(text: string): string[] {
     const hashtagRegex = /#[a-zA-Z0-9_]+/g
     const matches = text.match(hashtagRegex) || [];
     return Array.from(new Set<string>(
-        matches.filter((tag: string) => tag.length > 3)
+        matches
+            .filter((tag: string) => tag.length > 3)
+            .filter((tag: string) => !this.badWordsSet.has(tag.slice(1).toLowerCase()))
     ));
   }
 
