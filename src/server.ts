@@ -14,7 +14,7 @@ import cron from 'node-cron'
 
 export class FeedGenerator {
   public app: express.Application
-  public server?: http.Server
+  public server: http.Server
   public cache: RedisClient
   public firehose: FirehoseSubscription
   public cfg: Config
