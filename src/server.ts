@@ -9,6 +9,8 @@ import { FirehoseSubscription } from './subscription'
 import { AppContext, Config } from './config'
 import wellKnown from './well-known'
 import {RedisClient} from "./cache/redis-client";
+import {HashtagBot} from "./bot/hashtag-bot";
+import cron from 'node-cron'
 
 export class FeedGenerator {
   public app: express.Application
@@ -16,6 +18,7 @@ export class FeedGenerator {
   public cache: RedisClient
   public firehose: FirehoseSubscription
   public cfg: Config
+  public bot: HashtagBot
 
   constructor(
     app: express.Application,
@@ -27,6 +30,7 @@ export class FeedGenerator {
     this.cache = cache
     this.firehose = firehose
     this.cfg = cfg
+    this.bot = new HashtagBot(cfg, cache);
   }
 
   static create(cfg: Config) {
@@ -67,9 +71,17 @@ export class FeedGenerator {
   }
 
   async start(): Promise<http.Server> {
+    await this.cache.initialize();
     this.firehose.run(this.cfg.subscriptionReconnectDelay)
     this.server = this.app.listen(this.cfg.port, this.cfg.listenhost)
     await events.once(this.server, 'listening')
+    cron.schedule('0 */3 * * *', async () => {
+      try {
+        await this.bot.refreshTopHashtags()
+      } catch (error) {
+        console.error('Failed to refresh top hashtags:', error)
+      }
+    })
     return this.server
   }
 }

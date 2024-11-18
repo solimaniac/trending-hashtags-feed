@@ -13,11 +13,19 @@ interface HashtagCount {
     count: number;
 }
 
+interface HashtagPost {
+    hashtag: string;
+    count: number;
+    uri: string;
+}
+
 export class RedisClient {
     private client: RedisClientType;
     private readonly BUCKET_PREFIX = 'hashtag_bucket:';
     private readonly BUCKET_DURATION_MS = 60 * 60 * 1000;
     private readonly CURSOR_PREFIX = 'firehose_cursor:';
+    private readonly ITERATION_PREFIX = 'hashtag_iteration:';
+    private readonly CURRENT_ITERATION_KEY = 'current_hashtag_iteration';
 
     constructor(config: RedisConfig) {
         const { host = 'localhost', port = 6379, password, username } = config;
@@ -39,10 +47,6 @@ export class RedisClient {
 
     async initialize(): Promise<void> {
         await this.client.connect();
-    }
-
-    async shutdown(): Promise<void> {
-        await this.client.quit();
     }
 
     async trackHashtag(hashtag: string): Promise<number> {
@@ -123,5 +127,67 @@ export class RedisClient {
             }))
             .sort((a, b) => b.count - a.count)
             .slice(0, limit);
+    }
+
+    async storeHashtagPosts(iterationId: string, posts: HashtagPost[]): Promise<void> {
+        const key = `${this.ITERATION_PREFIX}${iterationId}`;
+
+        const sortedPosts = posts.sort((a, b) => b.count - a.count);
+
+        const hashEntries = sortedPosts.flatMap(post => [
+            `${post.hashtag}:cid`, post.uri,
+            `${post.hashtag}:count`, post.count.toString()
+        ]);
+
+        if (hashEntries.length > 0) {
+            await this.client.hSet(key, hashEntries);
+        }
+
+        const orderedHashtags = sortedPosts.map(post => post.hashtag);
+        await this.client.lPush(key + ':order', orderedHashtags);
+    }
+
+    async getHashtagPosts(iterationId: string): Promise<HashtagPost[]> {
+        const key = `${this.ITERATION_PREFIX}${iterationId}`;
+
+        const hashtags = await this.client.lRange(key + ':order', 0, -1);
+        if (!hashtags.length) return [];
+
+        const postDetails = await this.client.hGetAll(key);
+
+        return hashtags.map(hashtag => ({
+            hashtag,
+            cid: postDetails[`${hashtag}:cid`],
+            count: parseInt(postDetails[`${hashtag}:count`], 10)
+        }));
+    }
+
+    async setCurrentIterationId(iterationId: string): Promise<void> {
+        await this.client.set(this.CURRENT_ITERATION_KEY, iterationId);
+    }
+
+    async getCurrentIterationId(): Promise<string | null> {
+        return await this.client.get(this.CURRENT_ITERATION_KEY);
+    }
+
+
+    async expireOldIterations(currentIterationId: string): Promise<void> {
+        const iterationKeys = await this.client.keys(`${this.ITERATION_PREFIX}*`);
+        const orderKeys = await this.client.keys(`${this.ITERATION_PREFIX}*:order`);
+
+        const allKeys = [...iterationKeys, ...orderKeys];
+
+        const keysToExpire = allKeys.filter(key =>
+            !key.includes(currentIterationId) &&
+            !key.includes(`${currentIterationId}:order`)
+        );
+
+        if (keysToExpire.length > 0) {
+            await Promise.all(
+                keysToExpire.map(key =>
+                    this.client.expire(key, 24 * 60 * 60)
+                )
+            );
+        }
     }
 }

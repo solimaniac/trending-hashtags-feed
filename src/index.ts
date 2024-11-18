@@ -22,6 +22,8 @@ const run = async () => {
     redisPort: maybeInt(process.env.REDIS_PORT) ?? 6379,
     redisUsername: maybeStr(process.env.REDIS_USERNAME) ?? '',
     redisPassword: maybeStr(process.env.REDIS_PASSWORD) ?? '',
+    bskyUsername: maybeStr(process.env.BSKY_USERNAME) ?? '',
+    bskyPassword: maybeStr(process.env.BSKY_PASSWORD) ?? '',
   })
   await server.start()
   console.log(
