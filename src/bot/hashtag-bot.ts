@@ -1,39 +1,31 @@
-import { Config } from "../config";
-import { RedisClient } from "../cache/redis-client";
-import { v4 as uuidv4 } from 'uuid';
+import {Config} from "../config";
+import {RedisClient} from "../cache/redis-client";
+import {v4 as uuidv4} from 'uuid';
 import numeral from "numeral";
 
 export class HashtagBot {
     private bot: any;
     private username: string;
     private password: string;
-    private isLoggedIn: boolean;
     private cache: RedisClient;
 
     constructor(config: Config, cache: RedisClient) {
         this.username = config.bskyUsername;
         this.password = config.bskyPassword;
-        this.isLoggedIn = false;
         this.cache = cache;
     }
 
     private async initializeBot() {
-        const { Bot } = await import('@skyware/bot');
+        const {Bot} = await import('@skyware/bot');
         this.bot = new Bot();
+        await this.bot.login({
+            identifier: this.username,
+            password: this.password
+        });
     }
 
     async refreshTopHashtags(): Promise<void> {
-        if (!this.bot) {
-            await this.initializeBot();
-        }
-
-        if (!this.isLoggedIn) {
-            await this.bot.login({
-                identifier: this.username,
-                password: this.password
-            });
-            this.isLoggedIn = true;
-        }
+        await this.initializeBot();
 
         const iterationId = uuidv4();
         const topHashtags = await this.cache.getTopHashtags();
@@ -45,7 +37,7 @@ export class HashtagBot {
             uri: string;
         }[] = [];
 
-        for (const { hashtag, count } of sortedHashtags) {
+        for (const {hashtag, count} of sortedHashtags) {
             try {
                 const formattedCount = numeral(count).format('0.[0]a');
                 const post = await this.bot.post({
