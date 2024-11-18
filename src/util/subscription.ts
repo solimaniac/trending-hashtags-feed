@@ -15,7 +15,6 @@ import {RedisClient} from "../cache/redis-client";
 
 export abstract class FirehoseSubscriptionBase {
   public sub: Subscription<RepoEvent>
-  protected redisClient: RedisClient
 
   constructor(public redisClient: RedisClient, public service: string) {
     this.sub = new Subscription({

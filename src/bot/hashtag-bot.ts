@@ -45,7 +45,7 @@ export class HashtagBot {
                     successfulPosts.push({
                         hashtag,
                         count,
-                        uri: post.uri,
+                        uri: post.uri as string,
                     });
                 }
 

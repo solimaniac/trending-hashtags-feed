@@ -156,7 +156,7 @@ export class RedisClient {
 
         return hashtags.map(hashtag => ({
             hashtag,
-            cid: postDetails[`${hashtag}:cid`],
+            uri: postDetails[`${hashtag}:cid`],
             count: parseInt(postDetails[`${hashtag}:count`], 10)
         }));
     }
