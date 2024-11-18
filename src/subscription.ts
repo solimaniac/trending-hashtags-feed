@@ -9,7 +9,7 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
     const hashtagRegex = /#[a-zA-Z0-9_]+/g
     const matches = text.match(hashtagRegex) || [];
     return Array.from(new Set<string>(
-        matches.filter(tag => tag.length > 3)
+        matches.filter((tag: string) => tag.length > 3)
     ));
   }
 
