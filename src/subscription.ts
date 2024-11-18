@@ -7,7 +7,8 @@ import { FirehoseSubscriptionBase, getOpsByType } from './util/subscription'
 export class FirehoseSubscription extends FirehoseSubscriptionBase {
   private extractHashtags(text: string): string[] {
     const hashtagRegex = /#[a-zA-Z0-9_]+/g
-    return text.match(hashtagRegex) || []
+    const matches = text.match(hashtagRegex) || [];
+    return Array.from(new Set(matches));
   }
 
   async handleEvent(evt: RepoEvent) {
