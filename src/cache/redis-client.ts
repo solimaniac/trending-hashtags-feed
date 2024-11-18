@@ -5,7 +5,7 @@ interface RedisConfig {
     host: string;
     port: number;
     password: string;
-    username: string;
+    username?: string;
 }
 
 interface HashtagCount {
@@ -36,7 +36,6 @@ export class RedisClient {
                 port,
             },
             password,
-            username,
         };
 
         this.client = createClient(clientOptions);

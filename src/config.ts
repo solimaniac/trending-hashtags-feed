@@ -18,7 +18,7 @@ export type Config = {
   redisHost: string;
   redisPort: number;
   redisPassword: string;
-  redisUsername: string;
+  redisUsername?: string;
   bskyUsername: string;
   bskyPassword: string;
 }

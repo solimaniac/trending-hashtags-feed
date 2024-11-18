@@ -7,7 +7,7 @@ const run = async () => {
   const serviceDid =
     maybeStr(process.env.FEEDGEN_SERVICE_DID) ?? `did:web:${hostname}`
   const server = FeedGenerator.create({
-    port: maybeInt(process.env.FEEDGEN_PORT) ?? 3000,
+    port: maybeInt(process.env.PORT) ?? 3000,
     listenhost: maybeStr(process.env.FEEDGEN_LISTENHOST) ?? 'localhost',
     subscriptionEndpoint:
       maybeStr(process.env.FEEDGEN_SUBSCRIPTION_ENDPOINT) ??
@@ -20,7 +20,7 @@ const run = async () => {
     serviceDid,
     redisHost: maybeStr(process.env.REDIS_HOST) ?? 'localhost',
     redisPort: maybeInt(process.env.REDIS_PORT) ?? 6379,
-    redisUsername: maybeStr(process.env.REDIS_USERNAME) ?? '',
+    redisUsername: maybeStr(process.env.REDIS_USERNAME),
     redisPassword: maybeStr(process.env.REDIS_PASSWORD) ?? '',
     bskyUsername: maybeStr(process.env.BSKY_USERNAME) ?? '',
     bskyPassword: maybeStr(process.env.BSKY_PASSWORD) ?? '',
