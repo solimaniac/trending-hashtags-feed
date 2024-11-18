@@ -6,6 +6,7 @@
   "repository": "git@github.com:bluesky-social/feed-generator.git",
   "author": "dholms <dtholmgren@gmail.com>",
   "license": "MIT",
+  "type": "module",
   "scripts": {
     "publishFeed": "ts-node scripts/publishFeedGen.ts",
     "unpublishFeed": "ts-node scripts/unpublishFeedGen.ts",
