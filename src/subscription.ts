@@ -23,6 +23,7 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
         matches
             .filter((tag: string) => tag.length > 3)
             .filter((tag: string) => !this.badWordsSet.has(tag.slice(1).toLowerCase()))
+            .map((tag: string) => tag.toLowerCase())
     ));
   }
 
