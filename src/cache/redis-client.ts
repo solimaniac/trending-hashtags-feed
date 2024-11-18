@@ -143,7 +143,7 @@ export class RedisClient {
         }
 
         const orderedHashtags = sortedPosts.map(post => post.hashtag);
-        await this.client.lPush(key + ':order', orderedHashtags);
+        await this.client.rPush(key + ':order', orderedHashtags);
     }
 
     async getHashtagPosts(iterationId: string): Promise<HashtagPost[]> {
