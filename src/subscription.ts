@@ -56,12 +56,13 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
     const ops = await getOpsByType(evt)
 
     for (const post of ops.posts.creates) {
-      if (this.hasFilteredLabels(post.record)) {
+      if (
+          this.hasFilteredLabels(post.record) ||
+          !this.isWithinLast24Hours(post.record.createdAt)
+      ) {
         continue;
       }
-
-      console.log(post.record.createdAt, ' ', this.isWithinLast24Hours(post.record.createdAt));
-
+      
       const hashtags = this.extractHashtags(post.record.text)
 
       await Promise.all(
