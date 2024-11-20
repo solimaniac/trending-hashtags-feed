@@ -32,6 +32,7 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
       return false;
     }
 
+
     const labels = record.labels as { values?: { val: string }[] };
     if (!labels.values) {
       return false;
@@ -40,6 +41,13 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
     return labels.values.some(label =>
         this.labelFilter.includes(label.val)
     );
+  }
+
+  private isWithinLast24Hours(createdAt: string): boolean {
+    const created = new Date(createdAt);
+    const now = new Date();
+    const diffInHours = (now.getTime() - created.getTime()) / (1000 * 60 * 60);
+    return diffInHours <= 24;
   }
 
   async handleEvent(evt: RepoEvent) {
@@ -51,6 +59,8 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
       if (this.hasFilteredLabels(post.record)) {
         continue;
       }
+
+      console.log(post.record.createdAt, ' ', this.isWithinLast24Hours(post.record.createdAt));
 
       const hashtags = this.extractHashtags(post.record.text)
 
