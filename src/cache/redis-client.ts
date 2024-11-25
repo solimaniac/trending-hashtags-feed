@@ -50,7 +50,15 @@ export class RedisClient {
 
     async trackHashtag(hashtag: string): Promise<number> {
         const currentBucketKey = await this.getCurrentOrCreateBucket();
-        return await this.client.hIncrBy(currentBucketKey, hashtag, 1);
+        const count = await this.client.hIncrBy(currentBucketKey, hashtag, 1);
+
+        if (count === 1) {
+            const expirationBuffer = 5 * 60;
+            const bucketTTL = (25 * 60 * 60) + expirationBuffer;
+            await this.client.expire(currentBucketKey, bucketTTL);
+        }
+
+        return count;
     }
 
     async getCursor(service: string): Promise<number | null> {
@@ -71,7 +79,7 @@ export class RedisClient {
 
         if (!exists) {
             const expirationBuffer = 5 * 60;
-            const bucketTTL = Math.floor(this.BUCKET_DURATION_MS / 1000) + expirationBuffer;
+            const bucketTTL = (25 * 60 * 60) + expirationBuffer;
 
             await this.client.zAdd('hashtag_buckets', [{
                 score: bucketTimestamp,
