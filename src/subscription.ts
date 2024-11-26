@@ -76,7 +76,6 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
       }
 
       const hashtags = this.extractHashtags(post.record.text).filter(hashtag => !this.hashtagFilter.includes(hashtag));
-      console.log(hashtags.length);
 
       await Promise.all(
           hashtags.map(hashtag =>
