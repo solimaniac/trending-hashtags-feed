@@ -14,6 +14,18 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
     'graphic-media',
   ];
 
+  private readonly hashtagFilter = [
+    '#aiart',
+    '#furryart',
+    '#nsfw',
+    '#nsfwart',
+    '#realnsfw',
+    '#nsfwbluesky',
+    '#nsfwbsky',
+    '#nude',
+    '#body',
+  ];
+
   private readonly badWordsSet = new Set(badwords.array);
 
   private extractHashtags(text: string): string[] {
@@ -62,8 +74,9 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
       ) {
         continue;
       }
-      
-      const hashtags = this.extractHashtags(post.record.text)
+
+      const hashtags = this.extractHashtags(post.record.text).filter(hashtag => !this.hashtagFilter.includes(hashtag));
+      console.log(hashtags.length);
 
       await Promise.all(
           hashtags.map(hashtag =>
