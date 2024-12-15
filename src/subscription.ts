@@ -24,6 +24,7 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
     '#nsfwbsky',
     '#nude',
     '#body',
+    '#onlyfans'
   ];
 
   private readonly badWordsSet = new Set(badwords.array);

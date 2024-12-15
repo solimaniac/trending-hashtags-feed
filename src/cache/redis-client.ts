@@ -179,17 +179,16 @@ export class RedisClient {
 
         const allKeys = [...iterationKeys, ...orderKeys];
 
-        const keysToExpire = allKeys.filter(key =>
+        const keysToCheck = allKeys.filter(key =>
             !key.includes(currentIterationId) &&
             !key.includes(`${currentIterationId}:order`)
         );
 
-        if (keysToExpire.length > 0) {
-            await Promise.all(
-                keysToExpire.map(key =>
-                    this.client.expire(key, 24 * 60 * 60)
-                )
-            );
+        for (const key of keysToCheck) {
+            const ttl = await this.client.ttl(key);
+            if (ttl === -1) {
+                await this.client.expire(key, 5 * 24 * 60 * 60);
+            }
         }
     }
 }
