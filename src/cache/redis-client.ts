@@ -1,4 +1,5 @@
-import { createClient, RedisClientOptions } from 'redis';
+import {createClient, RedisClientOptions} from 'redis';
+
 type RedisClientType = ReturnType<typeof createClient>;
 
 interface RedisConfig {
@@ -26,9 +27,14 @@ export class RedisClient {
     private readonly CURSOR_PREFIX = 'firehose_cursor:';
     private readonly ITERATION_PREFIX = 'hashtag_iteration:';
     private readonly CURRENT_ITERATION_KEY = 'current_hashtag_iteration';
+    private readonly TOP_HASHTAGS_PREFIX = 'top_hashtags:';
+
+
+    private readonly TOP_HASHTAGS_LIMIT = 200;
+    private readonly RANK_VARIATION_THRESHOLD = 10;
 
     constructor(config: RedisConfig) {
-        const { host = 'localhost', port = 6379, password, username } = config;
+        const {host = 'localhost', port = 6379, password, username} = config;
 
         const clientOptions: RedisClientOptions = {
             socket: {
@@ -95,7 +101,46 @@ export class RedisClient {
         return bucketKey;
     }
 
-    async getTopHashtags(limit: number = 30): Promise<HashtagCount[]> {
+    private async getStaleHashtags(): Promise<Set<string>> {
+        const topHashtagKeys = await this.client.keys(`${this.TOP_HASHTAGS_PREFIX}*`);
+
+        if (topHashtagKeys.length === 0) {
+            return new Set();
+        }
+
+        const hashtagPositions = new Map<string, { min: number; max: number; count: number }>();
+
+        for (const key of topHashtagKeys) {
+            const hashtags = await this.client.lRange(key, 0, -1);
+
+            hashtags.forEach((hashtag, index) => {
+                const position = index + 1;
+                const stats = hashtagPositions.get(hashtag) || {min: position, max: position, count: 0};
+
+                stats.min = Math.min(stats.min, position);
+                stats.max = Math.max(stats.max, position);
+                stats.count++;
+
+                hashtagPositions.set(hashtag, stats);
+            });
+        }
+
+
+        console.log('Stale Hashtags: ',
+            Array.from(hashtagPositions.entries())
+                .filter(([_, stats]) => {
+                    const appearsInAllRecords = stats.count === topHashtagKeys.length;
+                    const stablePosition = (stats.max - stats.min) <= this.RANK_VARIATION_THRESHOLD;
+                    return appearsInAllRecords && stablePosition;
+                })
+                .map(([hashtag]) => hashtag)
+        );
+
+        // TODO: return set
+        return new Set();
+    }
+
+    async processTopHashtags(limit: number = 30): Promise<HashtagCount[]> {
         const currentTimestamp = Date.now();
         const twentyFourHoursAgo = currentTimestamp - (24 * 60 * 60 * 1000);
 
@@ -122,12 +167,25 @@ export class RedisClient {
             }
         }
 
-        return Array.from(aggregatedCounts.entries())
+        const topHashtags = Array.from(aggregatedCounts.entries())
             .map(([hashtag, count]) => ({
                 hashtag,
                 count
             }))
             .sort((a, b) => b.count - a.count)
+            .slice(0, this.TOP_HASHTAGS_LIMIT);
+
+        const recordKey = `${this.TOP_HASHTAGS_PREFIX}${currentTimestamp}`;
+        await this.client.rPush(
+            recordKey,
+            topHashtags.map(item => item.hashtag)
+        );
+        await this.client.expire(recordKey, 5 * 24 * 60 * 60);
+
+        const staleHashtags = await this.getStaleHashtags();
+
+        return topHashtags
+            .filter(item => !staleHashtags.has(item.hashtag))
             .slice(0, limit);
     }
 

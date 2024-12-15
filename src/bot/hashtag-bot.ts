@@ -28,7 +28,7 @@ export class HashtagBot {
         await this.initializeBot();
 
         const iterationId = uuidv4();
-        const topHashtags = await this.cache.getTopHashtags();
+        const topHashtags = await this.cache.processTopHashtags();
         const sortedHashtags = [...topHashtags].sort((a, b) => a.count - b.count);
 
         const successfulPosts: {
