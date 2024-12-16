@@ -126,18 +126,14 @@ export class RedisClient {
         }
 
 
-        console.log('Stale Hashtags: ',
-            Array.from(hashtagPositions.entries())
-                .filter(([_, stats]) => {
-                    const appearsInAllRecords = stats.count === topHashtagKeys.length;
-                    const stablePosition = (stats.max - stats.min) <= this.RANK_VARIATION_THRESHOLD;
-                    return appearsInAllRecords && stablePosition;
-                })
-                .map(([hashtag]) => hashtag)
+        return new Set(Array.from(hashtagPositions.entries())
+            .filter(([_, stats]) => {
+                const appearsInAllRecords = stats.count === topHashtagKeys.length;
+                const stablePosition = (stats.max - stats.min) <= this.RANK_VARIATION_THRESHOLD;
+                return appearsInAllRecords && stablePosition;
+            })
+            .map(([hashtag]) => hashtag)
         );
-
-        // TODO: return set
-        return new Set();
     }
 
     async processTopHashtags(limit: number = 30): Promise<HashtagCount[]> {
