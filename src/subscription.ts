@@ -14,21 +14,16 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
     'graphic-media',
   ];
 
-  private readonly hashtagFilter = [
-    '#aiart',
-    '#furryart',
-    '#nsfw',
-    '#nsfwart',
-    '#realnsfw',
-    '#nsfwbluesky',
-    '#nsfwbsky',
-    '#nude',
-    '#body',
-    '#onlyfans',
-    '#leiarcaica'
+  private readonly contentFilter = [
+    'nsfw',
+    'nude',
+    'onlyfans',
+    'aiart',
+    'furry',
+    'body',
+    'leiarcaica',
+    ...badwords.array
   ];
-
-  private readonly badWordsSet = new Set(badwords.array);
 
   private extractHashtags(text: string): string[] {
     const hashtagRegex = /#[a-zA-Z0-9_]+/g
@@ -36,7 +31,7 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
     return Array.from(new Set<string>(
         matches
             .filter((tag: string) => tag.length > 3)
-            .filter((tag: string) => !this.badWordsSet.has(tag.slice(1).toLowerCase()))
+            .filter((tag: string) => !this.contentFilter.some(filter => tag.toLowerCase().includes(filter)))
             .map((tag: string) => tag.toLowerCase())
     ));
   }
@@ -77,7 +72,7 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
         continue;
       }
 
-      const hashtags = this.extractHashtags(post.record.text).filter(hashtag => !this.hashtagFilter.includes(hashtag));
+      const hashtags = this.extractHashtags(post.record.text);
 
       await Promise.all(
           hashtags.map(hashtag =>
